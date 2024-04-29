@@ -47,7 +47,6 @@ WHERE game = 5 AND position = 'team' AND league IN ('LCK','LEC','LPL','LCS','PCS
 GROUP BY teamname
 ORDER BY Total_Appearances desc;
 
-
 -- 5. Show the players who have the highest champion count throughout a year in Tier 1 play.
 SELECT playername,COUNT(DISTINCT champion) AS Champion_Count
 FROM loldata2023
@@ -55,16 +54,42 @@ WHERE league IN ('LCK','LEC','LPL','LCS','PCS','LJL','CBLOL','LLA','VCS','WLDs',
 GROUP BY playername
 ORDER BY Champion_Count desc;
 
-
--- 6. Find the person with the highest KDA
-/*
+-- 6. Show the players with the highest KDA in LPL
 SELECT playername, get_player_kda(playername) AS KDA
 FROM loldata2023
-WHERE get_player_kda(playername) = (
-*/
-    SELECT MAX(get_player_kda(playername)) AS KDA
-    FROM loldata2023
-    WHERE league = 'LPL' and position = 'mid' 
-    GROUP BY playername
-    ORDER BY KDA desc
-    ;
+WHERE league = 'LPL' 
+GROUP BY playername
+ORDER BY KDA desc;
+
+-- 7. Show a player's KDA for whole year and at worlds
+SELECT playername, get_player_kda(playername) AS KDA, get_player_kda(playername,'WLDs') AS KDA_AT_WORLDS
+FROM loldata2023
+WHERE playername = 'Ruler'
+GROUP BY playername;
+
+
+-- 8. Support players with highest VSPM in Tier 1 league
+
+-- 9. Highest Death ratio (deaths/game) for players in Worlds
+
+-- 10. Teams' drakes/game rate
+
+-- 11. Person who lost the most gold buying control wards
+
+-- 12. Match with most triple kills
+
+-- 13. Player who gave the most number of first bloods
+
+-- 14. DMG / Gold ratio 
+
+-- 15. Team which takes the most turret plates per game
+
+-- 16. Junglers with the highest counter jungling percentage
+
+-- 17. Find the drakes' percentages. (Find which drake spawned the highest)
+
+-- 18. Most picked champion in support role at Worlds
+
+-- 19. Teams that got first three towers and still lost the game.
+
+-- 20. Reverse sweep
