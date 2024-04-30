@@ -69,13 +69,32 @@ GROUP BY playername;
 
 
 -- 8. Support players with highest VSPM in Tier 1 league
+SELECT playername, VSPM 
+FROM loldata2023
+WHERE league IN ('LCK','LEC','LPL','LCS','PCS','LJL','CBLOL','LLA','VCS','WLDs','MSI') AND playername NOT LIKE 'unknown player'
+ORDER BY VSPM;
 
 -- 9. Highest Death ratio (deaths/game) for players in Worlds
+SELECT playername, SUM(deaths)/COUNT(playername) AS Death_Ratio
+FROM loldata2023
+WHERE league = 'WLDs'
+GROUP BY playername
+ORDER BY Death_Ratio;
 
 -- 10. Teams' drakes/game rate
+SELECT team, SUM(dragons)/COUNT(team) AS Drake_Ratio
+FROM loldata2023
+WHERE league = 'LCK' and playername = null
+GROUP BY team
+ORDER BY Drake_Ratio;
 
 -- 11. Person who lost the most gold buying control wards
-
+SELECT playername, controlwardsbought, controlwardsbought * (-75) AS Gold_Lost
+FROM loldata2023
+WHERE league IN ('LCK','LEC','LPL','LCS','PCS','LJL','CBLOL','LLA','VCS','WLDs','MSI') AND playername NOT LIKE 'unknown player' AND controlwardsbought = 
+    (SELECT MAX(controlwardsbought)
+    FROM loldata2023
+    WHERE league IN ('LCK','LEC','LPL','LCS','PCS','LJL','CBLOL','LLA','VCS','WLDs','MSI') AND playername NOT LIKE 'unknown player');
 -- 12. Match with most triple kills
 
 -- 13. Player who gave the most number of first bloods
