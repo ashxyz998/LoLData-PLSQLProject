@@ -103,10 +103,26 @@ WHERE league IN ('LCK','LEC','LPL','LCS','PCS','LJL','CBLOL','LLA','VCS','WLDs',
     FROM loldata2023
     WHERE league IN ('LCK','LEC','LPL','LCS','PCS','LJL','CBLOL','LLA','VCS','WLDs','MSI') AND playername NOT LIKE 'unknown player');
 
--- 12. Match with most triple kills
+-- 12. Match with most triple kills from a team
+SELECT teamname, league, match_date, game as Game_NO
+    FROM loldata2023
+    WHERE position = 'team' AND triplekills = (
+    SELECT MAX(triplekills)
+    FROM loldata2023
+    WHERE position = 'team'
+    );
 
 -- 13. Player who gave the most number of first bloods
-
+SELECT playername, SUM(firstbloodkill)
+    FROM loldata2023
+    WHERE position <> 'team'
+    GROUP BY playername
+    HAVING SUM(firtbloodkill) > (
+        SELECT MAX(SUM(firstbloodkill))
+        FROM loldata2023
+        GROUP BY playername
+        HAVING MAX(SUM(firstbloodkill))
+    );  
 -- 14. DMG / Gold ratio 
 
 -- 15. Team which takes the most turret plates per game
@@ -120,8 +136,9 @@ WHERE league IN ('LCK','LEC','LPL','LCS','PCS','LJL','CBLOL','LLA','VCS','WLDs',
 -- 19. Teams that got first three towers and still lost the game.
 
 -- 20. Reverse sweep
+/*
 select teamname,league,count(*) from loldata2023
 where teamname = 'Bilibili Gaming' and position = 'team'
 group by teamname,league;
-
+*/
 select * from loldata2023;
