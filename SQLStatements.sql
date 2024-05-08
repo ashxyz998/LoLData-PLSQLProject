@@ -112,19 +112,22 @@ SELECT teamname, league, match_date, game as Game_NO
     WHERE position = 'team'
     );
 
--- 13. Player who gave the most number of first bloods
-SELECT playername, SUM(firstbloodkill)
+-- 13. Player who was the first blood victim the most
+SELECT playername, SUM(firstbloodvictim) AS No_of_First_Deaths
     FROM loldata2023
-    WHERE position <> 'team'
-    GROUP BY playername
-    HAVING SUM(firtbloodkill) > (
-        SELECT MAX(SUM(firstbloodkill))
+    WHERE playername = (
+        SELECT playername
         FROM loldata2023
         GROUP BY playername
-        HAVING MAX(SUM(firstbloodkill))
-    );  
--- 14. DMG / Gold ratio 
+        HAVING SUM(firstbloodvictim) = (
+            SELECT MAX(SUM(firstbloodvictim))
+            FROM loldata2023
+            GROUP BY playername
+        )
+    ); 
 
+-- 14. DMG / Gold ratio 
+SELECT 
 -- 15. Team which takes the most turret plates per game
 
 -- 16. Junglers with the highest counter jungling percentage
