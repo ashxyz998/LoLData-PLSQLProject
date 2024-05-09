@@ -184,11 +184,30 @@ SELECT champion
             GROUP BY champion
         )
     )
-    GROUP BY champion
+    GROUP BY champion;
     
 -- 19. Teams that got first three towers and still lost the game.
-SELECT teamname,
+SELECT teamname, league, match_date, game as Game_NO
+    FROM loldata2023
+    WHERE position = 'team' AND firsttothreetowers = 1 AND result = 0
+    GROUP BY teamname
+    ORDER BY match_date;
+    
 -- 20. Reverse sweep
+SELECT L.teamname, L.league, L.match_date
+    FROM loldata2023 L
+    WHERE L.position = 'team' AND L.game = 5 AND L.result = 1 AND L.match_date = (
+        SELECT L1.match_date
+        FROM loldata2023 L1
+        WHERE L1.position = 'team' AND L1.game = 4 AND L1.result = 1 AND L1.match_date = (
+            SELECT L2.match_date
+            FROM loldata2023 L2
+            WHERE L2.position = 'team' AND L2.game = 3 AND L2.result = 1
+        )
+    )
+    GROUP BY L.teamname
+    ORDER BY L.match_date
+    
 /*
 select teamname,league,count(*) from loldata2023
 where teamname = 'Bilibili Gaming' and position = 'team'
