@@ -37,6 +37,16 @@ END;
 /
 
 -- 2. Function to find the stat score on a specific champion
+CREATE OR REPLACE TYPE stat_score AS OBJECT
+    (
+        kda NUMBER(5,2),
+        
+    
+    );
+CREATE OR REPLACE FUNCTION get_stat_score(player_name IN VARCHAR2, stat_champion IN VARCHAR2)
+RETURN NUMBER(7,2), 
+IS
+kills NUMBER;
 
 
 -- 3. Compare the stat score on specific champion
