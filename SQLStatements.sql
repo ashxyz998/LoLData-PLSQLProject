@@ -104,12 +104,12 @@ WHERE league IN ('LCK','LEC','LPL','LCS','PCS','LJL','CBLOL','LLA','VCS','WLDs',
     WHERE league IN ('LCK','LEC','LPL','LCS','PCS','LJL','CBLOL','LLA','VCS','WLDs','MSI') AND playername NOT LIKE 'unknown player');
 
 -- 12. Match with most triple kills from a team
-SELECT teamname, league, match_date, game as Game_NO
+SELECT teamname, league, match_date, game as Game_NO, triplekills
     FROM loldata2023
-    WHERE position = 'team' AND triplekills = (
+    WHERE position = 'team' AND league IN ('LCK','LEC','LPL','LCS','PCS','LJL','CBLOL','LLA','VCS','WLDs','MSI') AND triplekills = (
     SELECT MAX(triplekills)
     FROM loldata2023
-    WHERE position = 'team'
+    WHERE position = 'team'  
     );
 
 -- 13. Player who was the first blood victim the most
@@ -118,53 +118,58 @@ SELECT playername, SUM(firstbloodvictim) AS No_of_First_Deaths
     WHERE playername = (
         SELECT playername
         FROM loldata2023
+        WHERE playername NOT LIKE 'unknown player'
         GROUP BY playername
         HAVING SUM(firstbloodvictim) = (
             SELECT MAX(SUM(firstbloodvictim))
             FROM loldata2023
+            WHERE playername NOT LIKE 'unknown player'
             GROUP BY playername
         )
-    ); 
+    )
+    GROUP BY playername; 
 
 -- 14. DMG / Gold ratio 
-SELECT ROUND((damageshare/earnedgold) * 100,2) AS DMG_PER_GOLD_Ratio
+SELECT playername, league, ROUND(AVG(damagetochampions/earnedgold) * 100,2) AS DMG_PER_GOLD_Ratio
     FROM loldata2023
-    WHERE position !='team' 
+    WHERE position !='team' AND league IN ('LCK','LEC','LPL','LCS','WLDs','MSI')
+    GROUP BY playername, league
+    HAVING Count(playername) > 10
     ORDER BY DMG_PER_GOLD_Ratio desc;
 
 -- 15. Team which takes the most turret plates per game
 SELECT T.* 
     FROM (
-SELECT teamname, AVG(turretplates) AS Turret_Plates_per_Game
+SELECT teamname, ROUND(AVG(turretplates),2) AS Turret_Plates_per_Game
     FROM loldata2023
-    WHERE position = 'team' 
+    WHERE position = 'team' AND league IN ('LCK','LEC','LCS')
     GROUP BY teamname
-    ORDER BY Turret_Plates_per_Game
+    ORDER BY Turret_Plates_per_Game desc
     ) T
     WHERE ROWNUM = 1;
 
--- 16. Junglers with the highest counter jungling percentage
-SELECT ROUND((MONSTERKILLSENEMYJUNGLE/MONSTERKILLS) * 100,2) AS Counter_Jungling_Percent
+-- 16. Junglers with the highest counter jungling percentage in LPL
+SELECT playername, NVL(ROUND(AVG(MONSTERKILLSENEMYJUNGLE/MONSTERKILLS) * 100,2),0) AS Counter_Jungling_Percent
     FROM loldata2023
-    WHERE league IN ('LCK','LEC','LPL','LCS','PCS','LJL','CBLOL','LLA','VCS','WLDs','MSI') AND playername NOT LIKE 'unknown player'
+    WHERE league ='LPL' AND position = 'jng'
     GROUP BY playername
     ORDER BY Counter_Jungling_Percent desc;
 
 -- 17. Find the drakes' percentages. (Find which drake spawned the highest)
-SELECT SUM(infernals) AS INFERNAL,
-    ROUND((SUM(infernals)/SUM(infernals+mountains+clouds+oceans+chemtechs+hextechs+elders))*100,2) AS INFERNAL_RATIO
+SELECT league,SUM(infernals) AS INFERNAL,
+    ROUND((SUM(infernals)/SUM(infernals+mountains+clouds+oceans+chemtechs+hextechs+elders))*100,2) AS INFERNAL_RATIO,
     SUM(mountains) AS MOUNTAIN, 
-    ROUND((SUM(mountains)/SUM(infernals+mountains+clouds+oceans+chemtechs+hextechs+elders))*100,2) AS INFERNAL_RATIO
+    ROUND((SUM(mountains)/SUM(infernals+mountains+clouds+oceans+chemtechs+hextechs+elders))*100,2) AS MOUNTAIN_RATIO,
     SUM(clouds) AS CLOUD, 
-    ROUND((SUM(clouds)/SUM(infernals+mountains+clouds+oceans+chemtechs+hextechs+elders))*100,2) AS INFERNAL_RATIO
+    ROUND((SUM(clouds)/SUM(infernals+mountains+clouds+oceans+chemtechs+hextechs+elders))*100,2) AS CLOUD_RATIO,
     SUM(oceans) AS OCEAN, 
-    ROUND((SUM(oceans)/SUM(infernals+mountains+clouds+oceans+chemtechs+hextechs+elders))*100,2) AS INFERNAL_RATIO
+    ROUND((SUM(oceans)/SUM(infernals+mountains+clouds+oceans+chemtechs+hextechs+elders))*100,2) AS OCEAN_RATIO,
     SUM(chemtechs) AS CHEMTECH,
-    ROUND((SUM(chemtechs)/SUM(infernals+mountains+clouds+oceans+chemtechs+hextechs+elders))*100,2) AS INFERNAL_RATIO
+    ROUND((SUM(chemtechs)/SUM(infernals+mountains+clouds+oceans+chemtechs+hextechs+elders))*100,2) AS CHEMTECH_RATIO,
     SUM(hextechs) AS HEXTECH,
-    ROUND((SUM(hextechs)/SUM(infernals+mountains+clouds+oceans+chemtechs+hextechs+elders))*100,2) AS INFERNAL_RATIO
+    ROUND((SUM(hextechs)/SUM(infernals+mountains+clouds+oceans+chemtechs+hextechs+elders))*100,2) AS HEXTECH_RATIO,
     SUM(elders) AS ELDER,
-    ROUND((SUM(elders)/SUM(infernals+mountains+clouds+oceans+chemtechs+hextechs+elders))*100,2) AS INFERNAL_RATIO
+    ROUND((SUM(elders)/SUM(infernals+mountains+clouds+oceans+chemtechs+hextechs+elders))*100,2) AS ELDER_RATIO
     FROM loldata2023
     WHERE league IN ('LCK','LEC','LPL','LCS','PCS','LJL','CBLOL','LLA','VCS','WLDs','MSI') AND position = 'team'
     GROUP BY league;
@@ -172,15 +177,15 @@ SELECT SUM(infernals) AS INFERNAL,
 -- 18. Most picked champion in support role at Worlds
 SELECT champion
     FROM loldata2023
-    WHERE champion = (
+    WHERE champion IN (
         SELECT champion
         FROM loldata2023
-        WHERE league = 'WLDs' AND position='supp'
+        WHERE league = 'WLDs' AND position='sup'
         GROUP BY champion
         HAVING COUNT(champion) = (
             SELECT MAX(COUNT(champion))
             FROM loldata2023
-            WHERE league = 'WLDs' AND position = 'supp'
+            WHERE league = 'WLDs' AND position = 'sup'
             GROUP BY champion
         )
     )
@@ -189,28 +194,30 @@ SELECT champion
 -- 19. Teams that got first three towers and still lost the game.
 SELECT teamname, league, match_date, game as Game_NO
     FROM loldata2023
-    WHERE position = 'team' AND firsttothreetowers = 1 AND result = 0
-    GROUP BY teamname
+    WHERE position = 'team' AND firsttothreetowers = 1 AND result = 0 AND league IN ('LCK','LEC','LPL','LCS','PCS','LJL','CBLOL','LLA','VCS','WLDs','MSI')
+    --GROUP BY teamname,league,match_date,game
     ORDER BY match_date;
     
--- 20. Reverse sweep
+-- 20. Reverse sweep -- have to do
 SELECT L.teamname, L.league, L.match_date
     FROM loldata2023 L
-    WHERE L.position = 'team' AND L.game = 5 AND L.result = 1 AND L.match_date = (
+    WHERE L.position = 'team' AND L.game = 3 AND L.result = 1 AND league IN ('LCK','LEC','LPL','LCS','PCS','LJL','CBLOL','LLA','VCS','WLDs','MSI')
+    AND L.match_date IN (
         SELECT L1.match_date
         FROM loldata2023 L1
-        WHERE L1.position = 'team' AND L1.game = 4 AND L1.result = 1 AND L1.match_date = (
+        WHERE L1.position = 'team' AND L1.game = 4 AND L1.result = 1 AND league IN ('LCK','LEC','LPL','LCS','PCS','LJL','CBLOL','LLA','VCS','WLDs','MSI')
+        AND L1.match_date IN (
             SELECT L2.match_date
             FROM loldata2023 L2
-            WHERE L2.position = 'team' AND L2.game = 3 AND L2.result = 1
+            WHERE L2.position = 'team' AND L2.game = 5 AND L2.result = 1 AND league IN ('LCK','LEC','LPL','LCS','PCS','LJL','CBLOL','LLA','VCS','WLDs','MSI')
         )
     )
     GROUP BY L.teamname
-    ORDER BY L.match_date
+    ORDER BY L.match_date;
     
 /*
 select teamname,league,count(*) from loldata2023
 where teamname = 'Bilibili Gaming' and position = 'team'
 group by teamname,league;
 */
-select * from loldata2023;
+select * from loldata2023 where position = 'jng' and league ='LCK';

@@ -36,7 +36,7 @@ BEGIN
 END;
 /
 
--- 2. Function to find the stat score on a specific champion
+-- 2. Function to find the stat score on a specific champion -- create objects and add methods
 CREATE OR REPLACE TYPE stat_score AS OBJECT
     (
         kda NUMBER(5,2),
